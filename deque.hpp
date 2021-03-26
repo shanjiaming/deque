@@ -370,7 +370,7 @@ namespace sjtu {
         size_t num;
 
         void getblock(Address x, Block &b) {
-            return blocks[x];
+            b = blocks[x];
         }
 
         void putblock(Address x, const Block &b) {
@@ -401,7 +401,8 @@ namespace sjtu {
 //	class const_iterator;
         class iterator {
             friend deque<T>;
-        private:
+        public:
+
             deque *deque_ptr;
             int block_th;
             int node_th;
@@ -412,7 +413,6 @@ namespace sjtu {
                                                                                             node_th(_node_th),
                                                                                             redundancy(_redundancy) {
             };
-        public:
             /**
              * return a new iterator which pointer n-next elements
              *   if there are not enough elements, iterator becomes invalid
@@ -681,16 +681,10 @@ namespace sjtu {
          *     throw if the iterator is invalid or it point to a wrong place.
          */
         iterator insert(iterator pos, const T &value) {
-            T* poi = new T (value);
-            Block bl;
-            getblock(0, bl);
-            Address block_pos = 0;
-            while (bl.num && bl.nodes[bl.num - 1] < insert_node) {
-                if (bl.next == -1) break;
-                block_pos = bl.next;
-                getblock(bl.next, bl);
-            }
-            int insert_pos = lower_bound(bl.nodes, insert_node);
+            Node insert_node = new T (value);
+            Address block_pos = pos.block_th;
+            Block& bl = blocks[block_pos];
+            int insert_pos = pos.node_th;
             if (bl.num < Nmax) {//insert directly
                 if (bl.num == insert_pos) {
                     bl.nodes.push_back(insert_node);
@@ -737,18 +731,11 @@ namespace sjtu {
          * throw if the container is empty, the iterator is invalid or it points to a wrong place.
          */
         iterator erase(iterator pos) {
-            Block bl;
-            getblock(0, bl);
-            Address block_pos = 0;
-            while (!bl.num || bl.nodes[bl.num - 1] < erase_node) {
-                if (bl.next == -1) break;
-                assert(bl.num);
-                block_pos = bl.next;
-                getblock(bl.next, bl);
-            }
-            int erase_pos = lower_bound(bl.nodes, erase_node);
-            Node temp = erase_node;
-            delete erase_node;
+
+            Address block_pos = pos.block_th;
+            Block& bl = blocks[block_pos];
+            int erase_pos = pos.node_th;
+            delete bl[erase_pos];
             Node record;
             for (int i = erase_pos + 1; i < bl.num; ++i) {
                 bl.nodes[i - 1] = bl.nodes[i];
