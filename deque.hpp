@@ -5,19 +5,19 @@
 
 #include <cstddef>
 
+#include <cassert>//FIXME delete me
+
 namespace sjtu {
 
     template<typename T>
     class vector {
     private:
         T **a;
-//T**a;//FIXME MemLeak
         size_t space, num;
         static const size_t InitSize = 5;
 
         void doubleSpace() {
             T **tmp;
-//T**tmp;//FIXME MemLeak
             space *= 2;
             tmp = new T *[space];
             for (int i = 0; i < num; ++i)
@@ -78,41 +78,29 @@ namespace sjtu {
                 return *this;
             }
 
-            /**
-             * TODO iter++
-             */
+
             iterator operator++(int) {
                 auto tmp = *this;
                 *this += 1;
                 return tmp;
             }
 
-            /**
-             * TODO ++iter
-             */
+
             iterator &operator++() {
                 return *this += 1;
             }
 
-            /**
-             * TODO iter--
-             */
+
             iterator operator--(int) {
                 auto tmp = *this;
                 *this -= 1;
                 return tmp;
             }
 
-            /**
-             * TODO --iter
-             */
             iterator &operator--() {
                 return *this -= 1;
             }
 
-            /**
-             * TODO *it
-             */
             T &operator*() const {
                 return *(vec->a[pos]);
             }
@@ -137,10 +125,6 @@ namespace sjtu {
 //            }
         };
 
-        /**
-         * TODO Constructs
-         * Atleast two: default constructor, copy constructor
-         */
         vector() : space(InitSize), num(0) {
             a = new T *[InitSize];
         }
@@ -152,16 +136,12 @@ namespace sjtu {
             }
         }
 
-        /**
-         * TODO Destructor
-         */
+
         ~vector() {
             clear();
         }
 
-        /**
-         * TODO Assignment operator
-         */
+
         vector &operator=(const vector &other) {
             if (this == &other)
                 return *this;
@@ -361,6 +341,10 @@ namespace sjtu {
             int num = 0;            //num means how many valid nodes are there in this Block.
 //        Node nodes[Nmax];       //This means 0 <= num <= Nmax
             vector<Node> nodes;
+
+            Node operator[](int x) {
+                return nodes[x];
+            }
         };
 
         vector<Block> blocks;
@@ -381,17 +365,6 @@ namespace sjtu {
             blocks.push_back(b);
         }
 
-        int lower_bound(vector<Node> v, Node erase_node) {//FIXME Ê†πÊú¨Â∞±Ê≤°Êúâlower_boundÈÄªËæëÔºåÊ∞îÊ≠ªÊàë‰∫Ü„ÄÇ
-            int sz = v.size();
-            for (int i = 0; i < sz; ++i) {
-                if (v[i] == erase_node) {
-                    return i;
-                }
-            }
-            return sz;
-        }
-
-
 
     public:
         class iterator;
@@ -406,13 +379,16 @@ namespace sjtu {
             deque *deque_ptr;
             int block_th;
             int node_th;
-            int redundancy;
+            int endnote;
 
-            iterator(deque *_deque_ptr, int _block_th, int _node_th, int _redundancy = 0) : deque_ptr(_deque_ptr),
-                                                                                            block_th(_block_th),
-                                                                                            node_th(_node_th),
-                                                                                            redundancy(_redundancy) {
+            iterator() {};
+
+            iterator(deque *_deque_ptr, int _block_th, int _node_th, int _endnote = 0) : deque_ptr(_deque_ptr),
+                                                                                         block_th(_block_th),
+                                                                                         node_th(_node_th),
+                                                                                         endnote(_endnote) {
             };
+
             /**
              * return a new iterator which pointer n-next elements
              *   if there are not enough elements, iterator becomes invalid
@@ -443,8 +419,8 @@ namespace sjtu {
                 //TODO
                 if (n < 0)
                     return (*this -= (-n));
-                int nchange = n + node_th + redundancy;
-                redundancy = 0;
+                int nchange = n + node_th + endnote;
+                endnote = 0;
                 while (block_th < deque_ptr->blocks.size()) {
                     if (nchange < deque_ptr->blocks[block_th].num) {
                         node_th = nchange;
@@ -453,7 +429,7 @@ namespace sjtu {
                     nchange -= deque_ptr->blocks[block_th].num;
                     ++block_th;
                 }
-                redundancy = nchange;
+                endnote = nchange;
                 node_th = 0;
                 return *this;
             }
@@ -461,8 +437,8 @@ namespace sjtu {
             iterator &operator-=(const int &n) {
                 if (n < 0)
                     return (*this += (-n));
-                int nchange = -n + node_th + redundancy;
-                redundancy = 0;
+                int nchange = -n + node_th + endnote;
+                endnote = 0;
                 while (block_th >= 0) {
                     if (nchange >= 0) {
                         node_th = nchange;
@@ -471,30 +447,22 @@ namespace sjtu {
                     --block_th;
                     nchange += deque_ptr->blocks[block_th].num;
                 }
-                redundancy = nchange;
+                endnote = nchange;
                 node_th = 0;
                 return *this;
             }
 
-            /**
-             * TODO iter++
-             */
+
             iterator operator++(int) {
                 iterator ret = *this;
                 *this += 1;
                 return ret;
             }
 
-            /**
-             * TODO ++iter
-             */
             iterator &operator++() {
                 return *this += 1;
             }
 
-            /**
-             * TODO iter--
-             */
             iterator operator--(int) {
                 iterator ret = *this;
                 *this -= 1;
@@ -513,8 +481,8 @@ namespace sjtu {
              * 		throw if iterator is invalid
              */
             T &operator*() const {
-                if(redundancy != 0) throw invalid_iterator();
-                return deque_ptr->blocks[block_th][node_th];
+                if (endnote != 0) throw invalid_iterator();
+                return *(deque_ptr->blocks[block_th][node_th]);
             }
 
             /**
@@ -589,22 +557,22 @@ namespace sjtu {
          * throw index_out_of_bound if out of bound.
          */
         T &at(const size_t &pos) {
-            try{
-                auto ret = *(begin() + pos);
+            try {
+                auto& ret = *(begin() + pos);
                 return ret;
-            } catch(invalid_iterator) {
+            } catch (invalid_iterator) {
                 throw index_out_of_bound();
             }
         }
 
         const T &at(const size_t &pos) const {
-            try{
+            try {
                 auto ret = *(cbegin() + pos);
                 return ret;
-            } catch(invalid_iterator) {
+            } catch (invalid_iterator) {
                 throw index_out_of_bound();
             }
-            //return *(cbegin() + pos);//FIXME Ëøô‰∏™ÁâàÊú¨ÊöÇÊó∂‰∏çËÉΩËøô‰πàÂÜôÔºåÂõ†‰∏∫const_iteratorÊòØÂÅáconst„ÄÇ
+            //return *(cbegin() + pos);//FIXME ’‚∏ˆ∞Ê±æ‘› ±≤ªƒ‹’‚√¥–¥£¨“ÚŒ™const_iterator «ºŸconst°£
         }
 
         T &operator[](const size_t &pos) {
@@ -646,7 +614,7 @@ namespace sjtu {
          * returns an iterator to the end.
          */
         iterator end() {
-            return iterator(this, last_block_address, blocks[last_block_address].size() - 1, 1);
+            return iterator(this, last_block_address, blocks[last_block_address].num - 1, 1);
         }
 
         const_iterator cend() const {}
@@ -681,10 +649,18 @@ namespace sjtu {
          *     throw if the iterator is invalid or it point to a wrong place.
          */
         iterator insert(iterator pos, const T &value) {
-            Node insert_node = new T (value);
+            if (pos.endnote == 1) {
+                push_back(value);
+                return --end();
+            }
+            if (pos.endnote != 0) {
+                throw invalid_iterator();
+            }
+            Node insert_node = new T(value);
             Address block_pos = pos.block_th;
-            Block& bl = blocks[block_pos];
+            Block &bl = blocks[block_pos];
             int insert_pos = pos.node_th;
+
             if (bl.num < Nmax) {//insert directly
                 if (bl.num == insert_pos) {
                     bl.nodes.push_back(insert_node);
@@ -710,18 +686,20 @@ namespace sjtu {
                     bl_end.num = bl.num - insert_pos;
                     bl.num = insert_pos + 1;
                 } else {
-
-//                bl_end.nodes[0] = insert_node;
                     bl_end.nodes.push_back(insert_node);
                     bl_end.num = bl.num - insert_pos + (insert_pos == bl.num);
                 }
                 bl_end.next = bl.next;
-                last_block_address = bl.next = blocks.size();
+                bl.next = blocks.size() - 1;
+                if (bl_end.next == -1) {
+                    last_block_address = bl.next;
+                }
                 //this is change mark
                 putblock(block_pos, bl);
                 putblockend(bl_end);
             }
             ++num;
+            return pos;//FIXME
         }
 
         /**
@@ -731,9 +709,16 @@ namespace sjtu {
          * throw if the container is empty, the iterator is invalid or it points to a wrong place.
          */
         iterator erase(iterator pos) {
-
+            if (pos + 1 == end()) {
+                pop_back();
+                return end();
+            }
+            if (pos.endnote != 0)
+                throw invalid_iterator();
+            if (empty())
+                throw container_is_empty();
             Address block_pos = pos.block_th;
-            Block& bl = blocks[block_pos];
+            Block &bl = blocks[block_pos];
             int erase_pos = pos.node_th;
             delete bl[erase_pos];
             Node record;
@@ -745,7 +730,8 @@ namespace sjtu {
                 Block bl_next;
                 getblock(bl.next, bl_next);
                 if (bl.num + bl_next.num <= Nmax) {
-                    last_block_address = bl.next;
+                    if (bl_next.next == -1)
+                        last_block_address = bl.next;//FIXME endœµ¡–µƒ≈–∂®∫Õcharu£®±ÿ–Î∏ƒ≥…pushbsack£©“≤∂º”–Œ Ã‚°£ªπ”–πÿ”⁄redundancyµƒº∆À„£®endnote£©
                     for (int i = 0; i < bl_next.num; ++i) {
                         bl.nodes[i + bl.num] = bl_next.nodes[i];
                     }
@@ -754,13 +740,32 @@ namespace sjtu {
                 }
             }
             putblock(block_pos, bl);
-            --num;        }
+            --num;
+            return pos;//FIXME
+        }
 
         /**
          * adds an element to the end
          */
         void push_back(const T &value) {
-            insert(end(), value);
+            if (last_block_address == -1){
+                blocks.push_back(Block());
+                last_block_address = blocks.size()  - 1;
+            }
+            Block &bl = blocks[last_block_address];
+            assert(bl.next == -1);
+            ++num;
+            if (bl.num < Nmax) {
+                bl.nodes.push_back(new T(value));
+                bl.num++;
+                return;
+            }
+            Block bl_end;
+            bl_end.nodes.push_back(new T(value));
+            bl_end.num = 1;
+            bl_end.next = -1;
+            blocks.push_back(bl_end);
+            last_block_address = bl.next = blocks.size() - 1;
         }
 
         /**
@@ -770,7 +775,22 @@ namespace sjtu {
         void pop_back() {
             if (empty())
                 throw container_is_empty();
-            erase(--end());
+            --num;
+            Block &bl = blocks[last_block_address];
+            assert(bl.next == -1);
+            delete bl.nodes.back();
+            bl.nodes.pop_back();
+            bl.num--;
+            if (bl.num > 1) {
+                return;
+            }
+            //kill the last block, O(n)
+            Address bl_pos = 0, bl_next_pos = blocks[bl_pos].next;
+            while(blocks[bl_next_pos].next != -1){
+                bl_pos = bl_next_pos;
+                bl_next_pos = blocks[bl_next_pos].next;
+            }
+            last_block_address = bl_pos;
         }
 
         /**
