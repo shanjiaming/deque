@@ -7,6 +7,7 @@
 
 #include <cassert>//FIXME delete me
 #include <vector>//FIXME delete me
+
 using std::vector;//FIXME delete me
 
 namespace sjtu {
@@ -14,21 +15,22 @@ namespace sjtu {
     template<typename T>
     class vector {
     private:
-        T** a;
+        T **a;
 //T**a;//FIXME MemLeak
         size_t space, num;
         static const size_t InitSize = 5;
 
         void doubleSpace() {
-            T** tmp;
+            T **tmp;
 //T**tmp;//FIXME MemLeak
             space *= 2;
-            tmp = new T*[space];
+            tmp = new T *[space];
             for (int i = 0; i < num; ++i)
                 tmp[i] = a[i];
             delete[] a;
             a = tmp;
         }
+
     public:
         /**
          * TODO
@@ -39,6 +41,7 @@ namespace sjtu {
          * you can see RandomAccessIterator at CppReference for help.
          */
         class const_iterator;
+
         class iterator {
             friend vector<T>;
         private:
@@ -52,9 +55,11 @@ namespace sjtu {
             iterator operator+(const int &n) const {
                 return iterator(vec, pos + n);
             }
+
             iterator operator-(const int &n) const {
                 return iterator(vec, pos - n);
             }
+
             // return the distance between two iterators,
             // if these two iterators point to different vectors, throw invaild_iterator.
             int operator-(const iterator &rhs) const {
@@ -62,14 +67,17 @@ namespace sjtu {
                     throw invalid_iterator();
                 return pos - rhs.pos;
             }
-            iterator& operator+=(const int &n) {
+
+            iterator &operator+=(const int &n) {
                 pos = pos + n;
                 return *this;
             }
-            iterator& operator-=(const int &n) {
+
+            iterator &operator-=(const int &n) {
                 pos = pos - n;
                 return *this;
             }
+
             /**
              * TODO iter++
              */
@@ -78,12 +86,14 @@ namespace sjtu {
                 *this += 1;
                 return tmp;
             }
+
             /**
              * TODO ++iter
              */
-            iterator& operator++() {
+            iterator &operator++() {
                 return *this += 1;
             }
+
             /**
              * TODO iter--
              */
@@ -92,37 +102,44 @@ namespace sjtu {
                 *this -= 1;
                 return tmp;
             }
+
             /**
              * TODO --iter
              */
-            iterator& operator--() {
+            iterator &operator--() {
                 return *this -= 1;
             }
+
             /**
              * TODO *it
              */
-            T& operator*() const{
+            T &operator*() const {
                 return *(vec->a[pos]);
             }
+
             /**
              * a operator to check whether two iterators are same (pointing to the same memory address).
              */
             bool operator==(const iterator &rhs) const {
                 return rhs.vec == vec && rhs.pos == pos;
             }
+
             bool operator==(const const_iterator &rhs) const {
                 return rhs.vec == vec && rhs.pos == pos;
             }
+
             /**
              * some other operator for iterator.
              */
             bool operator!=(const iterator &rhs) const {
                 return !(rhs == *this);
             }
+
             bool operator!=(const const_iterator &rhs) const {
                 return !(rhs == *this);
             }
         };
+
         /**
          * TODO
          * has same function as iterator, just for a const object.
@@ -142,9 +159,11 @@ namespace sjtu {
             const_iterator operator+(const int &n) const {
                 return const_iterator(vec, pos + n);
             }
+
             const_iterator operator-(const int &n) const {
                 return const_iterator(vec, pos - n);
             }
+
             // return the distance between two iterators,
             // if these two iterators point to different vectors, throw invaild_iterator.
             int operator-(const const_iterator &rhs) const {
@@ -152,14 +171,17 @@ namespace sjtu {
                     throw invalid_iterator();
                 return pos - rhs.pos;
             }
-            const_iterator& operator+=(const int &n) {
+
+            const_iterator &operator+=(const int &n) {
                 pos = pos + n;
                 return *this;
             }
-            const_iterator& operator-=(const int &n) {
+
+            const_iterator &operator-=(const int &n) {
                 pos = pos - n;
                 return *this;
             }
+
             /**
              * TODO iter++
              */
@@ -168,12 +190,14 @@ namespace sjtu {
                 *this += 1;
                 return tmp;
             }
+
             /**
              * TODO ++iter
              */
-            const_iterator& operator++() {
+            const_iterator &operator++() {
                 return *this += 1;
             }
+
             /**
              * TODO iter--
              */
@@ -182,56 +206,66 @@ namespace sjtu {
                 *this -= 1;
                 return tmp;
             }
+
             /**
              * TODO --iter
              */
-            const_iterator& operator--() {
+            const_iterator &operator--() {
                 return *this -= 1;
             }
+
             /**
              * TODO *it
              */
-            const T& operator*() const{
+            const T &operator*() const {
                 return *(vec->a[pos]);
             }
+
             /**
              * a operator to check whether two iterators are same (pointing to the same memory address).
              */
             bool operator==(const iterator &rhs) const {
                 return rhs.vec == vec && rhs.pos == pos;
             }
+
             bool operator==(const const_iterator &rhs) const {
                 return rhs.vec == vec && rhs.pos == pos;
             }
+
             /**
              * some other operator for const_iterator.
              */
             bool operator!=(const iterator &rhs) const {
                 return !(rhs == *this);
             }
+
             bool operator!=(const const_iterator &rhs) const {
                 return !(rhs == *this);
             }
         };
+
         /**
          * TODO Constructs
          * Atleast two: default constructor, copy constructor
          */
         vector() : space(InitSize), num(0) {
-            a = new T*[InitSize];
+            a = new T *[InitSize];
         }
+
         vector(const vector &other) : space(other.space), num(other.num) {
-            a = new T*[space];
+            a = new T *[space];
             for (int i = 0; i < num; ++i) {
                 a[i] = new T(*other.a[i]);
             }
         }
+
         /**
          * TODO Destructor
          */
         ~vector() {
             clear();
         }
+
         /**
          * TODO Assignment operator
          */
@@ -241,91 +275,104 @@ namespace sjtu {
             clear();
             space = other.space;
             num = other.num;
-            a = new T*[space];
+            a = new T *[space];
             for (int i = 0; i < num; ++i) {
                 a[i] = new T(*other.a[i]);
             }
 
             return *this;
         }
+
         /**
          * assigns specified element with bounds checking
          * throw index_out_of_bound if pos is not in [0, space)
          */
-        T & at(const size_t &pos) {
+        T &at(const size_t &pos) {
             if (pos < 0 || pos >= num)
                 throw index_out_of_bound();
             return *a[pos];
         }
-        const T & at(const size_t &pos) const {
+
+        const T &at(const size_t &pos) const {
             if (pos < 0 || pos >= num)
                 throw index_out_of_bound();
             return *a[pos];
         }
+
         /**
          * assigns specified element with bounds checking
          * throw index_out_of_bound if pos is not in [0, space)
          * !!! Pay attentions
          *   In STL this operator does not check the boundary but I want you to do.
          */
-        T & operator[](const size_t &pos) {
+        T &operator[](const size_t &pos) {
             if (pos < 0 || pos >= num)
                 throw index_out_of_bound();
             return *a[pos];
         }
-        const T & operator[](const size_t &pos) const {
+
+        const T &operator[](const size_t &pos) const {
             if (pos < 0 || pos >= num)
                 throw index_out_of_bound();
             return *a[pos];
         }
+
         /**
          * access the first element.
          * throw container_is_empty if space == 0
          */
-        const T & front() const {
+        const T &front() const {
             if (!num)
                 throw container_is_empty();
             return *a[0];
         }
+
         /**
          * access the last element.
          * throw container_is_empty if space == 0
          */
-        const T & back() const {
+        const T &back() const {
             if (!num)
                 throw container_is_empty();
             return *a[num - 1];
         }
+
         /**
          * returns an iterator to the beginning.
          */
         iterator begin() {
             return iterator(this, 0);
         }
+
         const_iterator cbegin() const {
             return const_iterator(this, 0);
         }
+
         /**
          * returns an iterator to the end.
          */
         iterator end() {
             return iterator(this, num);
         }
+
         const_iterator cend() const {
             return const_iterator(this, num);
         }
+
         /**
          * checks whether the container is empty
          */
         bool empty() const {
             return !num;
         }
+
         /**
          * returns the number of elements
          */
         size_t size() const {
             return num;
         }
+
         /**
          * clears the contents
          */
@@ -335,6 +382,7 @@ namespace sjtu {
             delete[] a;
             a = nullptr;
         }
+
         /**
          * inserts value before pos
          * returns an iterator pointing to the inserted value.
@@ -342,6 +390,7 @@ namespace sjtu {
         iterator insert(iterator pos, const T &value) {
             return insert(pos.pos, value);
         }
+
         /**
          * inserts value at index ind.
          * after inserting, this->at(ind) == value
@@ -359,6 +408,7 @@ namespace sjtu {
             ++num;
             return iterator(this, ind);
         }
+
         /**
          * removes the element at pos.
          * return an iterator pointing to the following element.
@@ -367,6 +417,7 @@ namespace sjtu {
         iterator erase(iterator pos) {
             return erase(pos.pos);
         }
+
         /**
          * removes the element with index ind.
          * return an iterator pointing to the following element.
@@ -381,6 +432,7 @@ namespace sjtu {
             --num;
             return iterator(this, ind);
         }
+
         /**
          * adds an element to the end.
          */
@@ -389,6 +441,7 @@ namespace sjtu {
                 doubleSpace();
             a[num++] = new T(value);
         }
+
         /**
          * remove the last element from the end.
          * throw container_is_empty if space() == 0
@@ -457,10 +510,10 @@ namespace sjtu {
             iterator() {};
 
             iterator(deque *_deque_ptr, int _block_th, int _node_th, int _endnote, int _dist) : deque_ptr(_deque_ptr),
-                                                                                         block_th(_block_th),
-                                                                                         node_th(_node_th),
-                                                                                         endnote(_endnote) ,
-                                                                                         dist(_dist){
+                                                                                                block_th(_block_th),
+                                                                                                node_th(_node_th),
+                                                                                                endnote(_endnote),
+                                                                                                dist(_dist) {
             };
 
             /**
@@ -495,7 +548,7 @@ namespace sjtu {
                 if (n < 0)
                     return (*this -= (-n));
                 dist += n;
-                int nchange = n + node_th + endnote;
+                int nchange = dist;
                 endnote = 0;
                 while (block_th < deque_ptr->blocks.size()) {
                     if (nchange < deque_ptr->blocks[block_th].num) {
@@ -503,7 +556,7 @@ namespace sjtu {
                         return *this;
                     }
                     nchange -= deque_ptr->blocks[block_th].num;
-                    ++block_th;
+                    block_th = deque_ptr->blocks[block_th].next;
                 }
                 endnote = nchange;
                 node_th = 0;
@@ -511,22 +564,24 @@ namespace sjtu {
             }
 
             iterator &operator-=(const int &n) {
-                if (n < 0)
-                    return (*this += (-n));
-                dist -= n;
-                int nchange = -n + node_th + endnote;
-                endnote = 0;
-                while (block_th >= 0) {
-                    if (nchange >= 0) {
-                        node_th = nchange;
-                        return *this;
-                    }
-                    --block_th;
-                    nchange += deque_ptr->blocks[block_th].num;
-                }
-                endnote = nchange;
-                node_th = 0;
-                return *this;
+                //FIXME Hack time explose
+                return *this = deque_ptr->begin() + (*this - deque_ptr->begin() - n);
+//                if (n < 0)
+//                    return (*this += (-n));
+//                dist -= n;
+//                int nchange = -n + node_th + endnote;
+//                endnote = 0;
+//                while (block_th >= 0) {
+//                    if (nchange >= 0) {
+//                        node_th = nchange;
+//                        return *this;
+//                    }
+//                    --block_th;
+//                    nchange += deque_ptr->blocks[block_th].num;
+//                }
+//                endnote = nchange;
+//                node_th = 0;
+//                return *this;
             }
 
 
@@ -559,7 +614,11 @@ namespace sjtu {
              */
             T &operator*() const {
                 if (endnote != 0) throw invalid_iterator();
-                return (deque_ptr->blocks[block_th].nodes[node_th]);
+                Address bl_pos = 0;
+                for (int i = 0; i < block_th; ++i) {
+                    bl_pos = deque_ptr->blocks[bl_pos].next;
+                }
+                return deque_ptr->blocks[bl_pos].nodes[node_th];;
             }
 
             /**
@@ -570,15 +629,20 @@ namespace sjtu {
                 return &**this;
             }
 
+
             /**
              * a operator to check whether two iterators are same (pointing to the same memory).
              */
-            bool operator==(const iterator &rhs) const {}
+            bool operator==(const iterator &rhs) const {
+                return (*this - rhs == 0);
+            }
 //		bool operator==(const const_iterator &rhs) const {}
             /**
              * some other operator for iterator.
              */
-            bool operator!=(const iterator &rhs) const {}
+            bool operator!=(const iterator &rhs) const {
+                return !(*this == rhs);
+            }
 //		bool operator!=(const const_iterator &rhs) const {}
         };
 /*	class const_iterator {
@@ -639,7 +703,7 @@ namespace sjtu {
          */
         T &at(const size_t &pos) {
             try {
-                auto& ret = *(begin() + pos);
+                auto &ret = *(begin() + pos);
                 return ret;
             } catch (invalid_iterator) {
                 throw index_out_of_bound();
@@ -760,7 +824,7 @@ namespace sjtu {
                 Block bl_end;
                 if (insert_pos != bl.num) {
                     for (int i = insert_pos; i < bl.num; ++i) {
-                        bl_end.nodes[i - insert_pos] = bl.nodes[i];
+                        bl_end.nodes.push_back(bl.nodes[i]);
                     }
                     bl.nodes[insert_pos] = value;
                     bl_end.num = bl.num - insert_pos;
@@ -770,7 +834,7 @@ namespace sjtu {
                     bl_end.num = bl.num - insert_pos + (insert_pos == bl.num);
                 }
                 bl_end.next = bl.next;
-                bl.next = blocks.size() - 1;
+                bl.next = blocks.size();
                 if (bl_end.next == -1) {
                     last_block_address = bl.next;
                 }
@@ -827,9 +891,9 @@ namespace sjtu {
          * adds an element to the end
          */
         void push_back(const T &value) {
-            if (last_block_address == -1){
+            if (last_block_address == -1) {
                 blocks.push_back(Block());
-                last_block_address = blocks.size()  - 1;
+                last_block_address = blocks.size() - 1;
             }
             Block &bl = blocks[last_block_address];
             assert(bl.next == -1);
@@ -864,7 +928,7 @@ namespace sjtu {
             }
             //kill the last block, O(n)
             Address bl_pos = 0, bl_next_pos = blocks[bl_pos].next;
-            while(blocks[bl_next_pos].next != -1){
+            while (blocks[bl_next_pos].next != -1) {
                 bl_pos = bl_next_pos;
                 bl_next_pos = blocks[bl_next_pos].next;
             }
