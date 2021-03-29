@@ -5,14 +5,6 @@
 
 #include <cstddef>
 
-#include <cassert>//FIXME delete me
-#include <vector>//FIXME delete me
-#include <iostream>//FIXME delete me
-
-using std::vector;//FIXME delete me
-using std::cout;
-using std::endl;
-
 namespace sjtu {
 
     template<typename T>
@@ -902,8 +894,6 @@ namespace sjtu {
                 }
             }
             ++num;
-            assert(blocks[last_block_address].next == -1);//FIXME what's this
-            assert(last_block_address == 0 || blocks[last_block_address].num);
             return begin() + pos.dist;//FIXME STart Fixing!
         }
 
@@ -925,7 +915,6 @@ namespace sjtu {
                 throw invalid_iterator();
             if (empty())
                 throw container_is_empty();
-            assert(pos.dist>=0 && pos.dist < num - 1);
             auto test_return = *pos;
             Address block_pos = pos.block_th;
             Block &bl = blocks[block_pos];
@@ -947,7 +936,6 @@ namespace sjtu {
 //                        bl_next.nodes.pop_back();
 
                     }else {
-                        assert(i + bl.num < bl.nodes.size());//不然就fix一下代码，扩个容或者push_back之类的。
                         bl.nodes[i + bl.num] = bl_next.nodes[i];
 //                        bl_next.nodes.pop_back();
 
@@ -962,8 +950,6 @@ namespace sjtu {
             }
             bl = blocks[block_pos];
             --num;
-            assert(blocks[last_block_address].next == -1);
-            assert(last_block_address == 0 || blocks[last_block_address].num);
             return begin() + pos.dist;//FIXME Start Fixing!
         }
 
@@ -972,8 +958,6 @@ namespace sjtu {
          */
         void push_back(const T &value) {
             Block &bl = blocks[last_block_address];
-            assert(blocks[last_block_address].next == -1);
-            assert(last_block_address == 0 || blocks[last_block_address].num);
             ++num;
             if (bl.num < Nmax) {
                 if(bl.nodes.size() == bl.num)
@@ -981,8 +965,6 @@ namespace sjtu {
                 else bl.nodes[bl.num] = value;
                 bl.num++;
 
-                assert(blocks[last_block_address].next == -1);
-                assert(last_block_address == 0 || blocks[last_block_address].num);
 
                 return;
             }
@@ -992,8 +974,6 @@ namespace sjtu {
             bl_end.next = -1;
             blocks.push_back(bl_end);
             last_block_address = bl.next = blocks.size() - 1;
-            assert(blocks[last_block_address].next == -1);
-            assert(last_block_address == 0 || blocks[last_block_address].num);
 
         }
 
@@ -1006,15 +986,10 @@ namespace sjtu {
                 throw container_is_empty();
             --num;
             Block &bl = blocks[last_block_address];
-            if (bl.next != -1) {
-                cout << bl.next << endl;
-                assert(false);
-            }
+
             bl.nodes.pop_back();
             bl.num--;
             if (bl.num > 0) {
-                assert(blocks[last_block_address].next == -1);
-                assert(last_block_address == 0 || blocks[last_block_address].num);
 
                 return;
             }
@@ -1028,8 +1003,6 @@ namespace sjtu {
             }
             blocks[bl_pos].next = -1;
             last_block_address = bl_pos;
-            assert(blocks[last_block_address].next == -1);
-            assert(last_block_address == 0 || blocks[last_block_address].num);
 
         }
 
