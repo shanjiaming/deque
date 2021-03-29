@@ -874,12 +874,17 @@ namespace sjtu {
             } else {// insert with split in insert pos
                 Block bl_end;
                 if (insert_pos != bl.num) {
+                    int popping_num = -1;
                     for (int i = insert_pos; i < bl.num; ++i) {
                         bl_end.nodes.push_back(bl.nodes[i]);
+                        ++popping_num;
                     }
                     bl.nodes[insert_pos] = value;
                     bl_end.num = bl.num - insert_pos;
                     bl.num = insert_pos + 1;
+                    while(popping_num--){
+                        bl.nodes.pop_back();
+                    }
                 } else {
                     bl_end.nodes.push_back(value);
                     bl_end.num = bl.num - insert_pos + (insert_pos == bl.num);
@@ -929,18 +934,28 @@ namespace sjtu {
             for (int i = erase_pos + 1; i < bl.num; ++i) {
                 bl.nodes[i - 1] = bl.nodes[i];
             }
+            bl.nodes.pop_back();
             --bl.num;
             if (bl.next != -1 && bl.num + blocks[bl.next].num <= Nmax) {//merge
-                const Block &bl_next = blocks[bl.next];
+                Block &bl_next = blocks[bl.next];
                 if (bl_next.next == -1)
                     last_block_address = block_pos;
+                int popping_num = 0;
                 for (int i = 0; i < bl_next.num; ++i) {
                     if (i + bl.num == bl.nodes.size()){
                         bl.nodes.push_back(bl_next.nodes[i]);
+//                        bl_next.nodes.pop_back();
+
                     }else {
                         assert(i + bl.num < bl.nodes.size());//不然就fix一下代码，扩个容或者push_back之类的。
                         bl.nodes[i + bl.num] = bl_next.nodes[i];
+//                        bl_next.nodes.pop_back();
+
                     }//FIXME 要改成push_back吗？
+                    ++popping_num;
+                }
+                while(popping_num--){
+                    bl_next.nodes.pop_back();
                 }
                 bl.num += bl_next.num;
                 bl.next = bl_next.next;
