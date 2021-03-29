@@ -225,6 +225,8 @@ namespace sjtu {
 
         ~vector() {
             clear();
+            delete [] a;
+            a = nullptr;
         }
 
         vector &operator=(const vector &other) {
@@ -305,8 +307,8 @@ namespace sjtu {
         void clear() {
             for (int i = 0; i < num; i++)
                 delete a[i];
-            delete[] a;
-            a = nullptr;
+            num = 0;
+            space = InitSize;
         }
 
         iterator insert(iterator pos, const T &value) {
@@ -359,7 +361,7 @@ namespace sjtu {
 
         using Node = T;
 
-        static const int Nmax = 10;
+        static const int Nmax = 500;
 
         typedef int Address;
 
@@ -428,11 +430,12 @@ namespace sjtu {
             }
 
             iterator &operator+=(const int &n) {
+                if (dist + n >= deque_ptr->num || dist + n < 0)//FIXME why write this?
+                    return *this = deque_ptr->end();
                 if (n < 0)
                     return (*this -= (-n));
                 dist += n;
-                if (dist >= deque_ptr->num)//FIXME why write this?
-                    return *this = deque_ptr->end();
+
                 int nchange = n + node_th + endnote;
                 endnote = 0;
                 while (block_th != -1) {
@@ -450,7 +453,7 @@ namespace sjtu {
 
             iterator &operator-=(const int &n) {
                 //FIXME Hack time explose
-                return *this = deque_ptr->begin() + (*this - deque_ptr->begin() - n);
+                return *this = deque_ptr->begin() + (dist - n);
 //                if (n < 0)
 //                    return (*this += (-n));
 //                dist -= n;
@@ -494,7 +497,7 @@ namespace sjtu {
 //                std::cout << "block_th=" << block_th << "\tnode_th=" << node_th <<
 //                "\tendnote=" << endnote <<
 //                "\tdist=" << dist << std::endl;
-                if (endnote != 0) throw invalid_iterator();
+                if (dist < 0 || dist >= deque_ptr->num) throw invalid_iterator();
                 return deque_ptr->blocks[block_th].nodes[node_th];
             }
 
@@ -507,16 +510,23 @@ namespace sjtu {
              * a operator to check whether two iterators are same (pointing to the same memory).
              */
             bool operator==(const iterator &rhs) const {
-                return (*this - rhs == 0);
+                return (dist - rhs.dist == 0);
             }
-//		bool operator==(const const_iterator &rhs) const {}
+
+            bool operator==(const const_iterator &rhs) const {
+                return (dist - rhs.dist == 0);
+            }
+
             /**
              * some other operator for iterator.
              */
             bool operator!=(const iterator &rhs) const {
                 return !(*this == rhs);
             }
-//		bool operator!=(const const_iterator &rhs) const {}
+
+            bool operator!=(const const_iterator &rhs) const {
+                return !(*this == rhs);
+            }
         };
 
 /*	class const_iterator {
@@ -561,6 +571,16 @@ namespace sjtu {
                                                                                                             dist(_dist) {
             };
 
+            const_iterator(const const_iterator &other) = default;
+
+            const_iterator(const iterator &other) {
+                deque_ptr = other.deque_ptr;
+                block_th = other.block_th;
+                node_th = other.node_th;
+                endnote = other.endnote;
+                dist = other.dist;
+            }
+
             /**
              * return a new const_iterator which pointer n-next elements
              *   if there are not enough elements, const_iterator becomes invalid
@@ -590,9 +610,12 @@ namespace sjtu {
 
             const_iterator &operator+=(const int &n) {
                 //TODO
+                if (dist + n >= deque_ptr->num || dist + n < 0)//FIXME why write this?
+                    return *this = deque_ptr->cend();
                 if (n < 0)
                     return (*this -= (-n));
                 dist += n;
+
                 int nchange = n + node_th + endnote;
                 endnote = 0;
                 while (block_th != -1) {
@@ -610,7 +633,7 @@ namespace sjtu {
 
             const_iterator &operator-=(const int &n) {
                 //FIXME Hack time explose
-                return *this = deque_ptr->cbegin() + (*this - deque_ptr->cbegin() - n);
+                return *this = deque_ptr->cbegin() + (dist - n);
 //                if (n < 0)
 //                    return (*this += (-n));
 //                dist -= n;
@@ -661,7 +684,7 @@ namespace sjtu {
 //                std::cout << "block_th=" << block_th << "\tnode_th=" << node_th <<
 //                "\tendnote=" << endnote <<
 //                "\tdist=" << dist << std::endl;
-                if (endnote != 0) throw invalid_iterator();
+                if (dist < 0 || dist >= deque_ptr->num) throw invalid_iterator();
                 return deque_ptr->blocks[block_th].nodes[node_th];
             }
 
@@ -678,16 +701,23 @@ namespace sjtu {
              * a operator to check whether two const_iterators are same (pointing to the same memory).
              */
             bool operator==(const const_iterator &rhs) const {
-                return (*this - rhs == 0);
+                return (dist - rhs.dist == 0);
             }
-//		bool operator==(const const_const_iterator &rhs) const {}
+
+            bool operator==(const iterator &rhs) const {
+                return (dist - rhs.dist == 0);
+            }
+
             /**
              * some other operator for const_iterator.
              */
             bool operator!=(const const_iterator &rhs) const {
                 return !(*this == rhs);
             }
-//		bool operator!=(const const_iterator &rhs) const {}
+
+            bool operator!=(const iterator &rhs) const {
+                return !(*this == rhs);
+            }
         };
 
         /**
@@ -700,32 +730,37 @@ namespace sjtu {
         }
 
         deque(const deque &other) = default;
+//        deque(const deque &other) {
+//            last_block_address = other.last_block_address;
+//            num = other.num;
+//            blocks = other.blocks;
+//        };
 
         ~deque() {}
 
         deque &operator=(const deque &other) = default;
+//        deque &operator=(const deque &other) {
+//            if (this == &other)
+//                return *this;
+//            clear();
+//            last_block_address = other.last_block_address;
+//            num = other.num;
+//            blocks = other.blocks;
+//            return *this;
+//        };
 
         /**
          * access specified element with bounds checking
          * throw index_out_of_bound if out of bound.
          */
         T &at(const size_t &pos) {
-            try {
-                auto &ret = *(begin() + pos);
-                return ret;
-            } catch (invalid_iterator) {
-                throw index_out_of_bound();
-            }
+            if (pos < 0 || pos >= num) throw index_out_of_bound();
+            return *(begin() + pos);
         }
 
         const T &at(const size_t &pos) const {
-            try {
-                auto ret = *(cbegin() + pos);
-                return ret;
-            } catch (invalid_iterator) {
-                throw index_out_of_bound();
-            }
-            //return *(cbegin() + pos);//FIXME 这个版本暂时不能这么写，因为const_iterator是假const。
+            if (pos < 0 || pos >= num) throw index_out_of_bound();
+            return *(cbegin() + pos);
         }
 
         T &operator[](const size_t &pos) {
@@ -795,8 +830,9 @@ namespace sjtu {
          */
         void clear() {
             blocks.clear();
+            blocks.push_back(Block());
             num = 0;
-            last_block_address = -1;
+            last_block_address = 0;
         }
 
         /**
@@ -806,6 +842,9 @@ namespace sjtu {
          *     throw if the iterator is invalid or it point to a wrong place.
          */
         iterator insert(iterator pos, const T &value) {
+            if (pos.deque_ptr != this) {
+                throw invalid_iterator();
+            }
             if (pos.endnote == 1) {//FIXME what's this
                 push_back(value);
                 return --end();
@@ -860,8 +899,7 @@ namespace sjtu {
             ++num;
             assert(blocks[last_block_address].next == -1);//FIXME what's this
             assert(last_block_address == 0 || blocks[last_block_address].num);
-
-            return pos;//FIXME
+            return begin() + pos.dist;//FIXME STart Fixing!
         }
 
         /**
@@ -871,6 +909,9 @@ namespace sjtu {
          * throw if the container is empty, the iterator is invalid or it points to a wrong place.
          */
         iterator erase(iterator pos) {
+            if (pos.deque_ptr != this) {
+                throw invalid_iterator();
+            }
             if (pos + 1 == end()) {//FIXME what's this
                 pop_back();
                 return end();
@@ -879,20 +920,27 @@ namespace sjtu {
                 throw invalid_iterator();
             if (empty())
                 throw container_is_empty();
+            assert(pos.dist>=0 && pos.dist < num - 1);
+            auto test_return = *pos;
             Address block_pos = pos.block_th;
             Block &bl = blocks[block_pos];
             int erase_pos = pos.node_th;
+            auto ret_value = bl.nodes[erase_pos];
             for (int i = erase_pos + 1; i < bl.num; ++i) {
                 bl.nodes[i - 1] = bl.nodes[i];
             }
             --bl.num;
             if (bl.next != -1 && bl.num + blocks[bl.next].num <= Nmax) {//merge
-                const Block& bl_next = blocks[bl.next];
+                const Block &bl_next = blocks[bl.next];
                 if (bl_next.next == -1)
                     last_block_address = block_pos;
                 for (int i = 0; i < bl_next.num; ++i) {
-                    assert(i + bl.num < bl.nodes.size());//不然就fix一下代码，扩个容或者push_back之类的。
-                    bl.nodes[i + bl.num] = bl_next.nodes[i];//FIXME 要改成push_back吗？
+                    if (i + bl.num == bl.nodes.size()){
+                        bl.nodes.push_back(bl_next.nodes[i]);
+                    }else {
+                        assert(i + bl.num < bl.nodes.size());//不然就fix一下代码，扩个容或者push_back之类的。
+                        bl.nodes[i + bl.num] = bl_next.nodes[i];
+                    }//FIXME 要改成push_back吗？
                 }
                 bl.num += bl_next.num;
                 bl.next = bl_next.next;
@@ -901,8 +949,7 @@ namespace sjtu {
             --num;
             assert(blocks[last_block_address].next == -1);
             assert(last_block_address == 0 || blocks[last_block_address].num);
-
-            return pos;//FIXME
+            return begin() + pos.dist;//FIXME Start Fixing!
         }
 
         /**
@@ -914,8 +961,11 @@ namespace sjtu {
             assert(last_block_address == 0 || blocks[last_block_address].num);
             ++num;
             if (bl.num < Nmax) {
-                bl.nodes.push_back(value);
+                if(bl.nodes.size() == bl.num)
+                    bl.nodes.push_back(value);
+                else bl.nodes[bl.num] = value;
                 bl.num++;
+
                 assert(blocks[last_block_address].next == -1);
                 assert(last_block_address == 0 || blocks[last_block_address].num);
 
